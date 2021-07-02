@@ -172,6 +172,8 @@ jobs:
       - name: Docker Login
         run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin registry.gitlab.com
       - run: |
+          export API_VERSION
+          export FRONTEND_VERSION
           docker-compose pull api frontend
           docker tag ${API_IMAGE_NAME}:${API_VERSION} ${API_IMAGE_NAME}:${API_IMAGE_RELEASE_VERSION}
           docker tag ${FRONTEND_IMAGE_NAME}:${FRONTEND_VERSION} ${FRONTEND_IMAGE_NAME}:${FRONTEND_IMAGE_RELEASE_VERSION}
