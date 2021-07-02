@@ -192,7 +192,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: ping
-        run: ping -c 3 ${{ secrets.PROXY_SERVER_HOST }}
+        run: ping -c 3 185.235.42.248
       - name: Inflate SSL files
         working-directory: deployment/ansible/
         run: |
@@ -205,7 +205,7 @@ jobs:
           ssl_full_chain_file=SSL_FULL_CHAIN_FILE
           ssl_private_key_file=SSL_PRIVATE_KEY_FILE
           docker_hub_password=${{ secrets.DOCKER_HUB_PASSWORD }}
-          proxy_server_host=${{ secrets.PROXY_SERVER_HOST }}
+          proxy_server_host=185.235.42.248
           proxy_server_user=${{ secrets.PROXY_SERVER_USER }}
           proxy_server_pass=${{ secrets.PROXY_SERVER_PASS }}
           api_version=snapshot-${GITHUB_SHA}
