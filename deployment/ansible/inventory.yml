@@ -18,6 +18,8 @@ all:
     recaptcha_server_key: '{{ lookup("env", "RECAPTCHA_SERVER_KEY") | mandatory }}'
     backup_file_remote_path: '/tmp/backup.json'
     backup_file_local_path: './backup.json'
+    ssl_full_chain_file: '{{ lookup("env", "SSL_FULL_CHAIN_FILE") }}'
+    ssl_private_key_file: '{{ lookup("env", "SSL_PRIVATE_KEY_FILE") }}'
   children:
     production:
       hosts:
