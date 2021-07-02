@@ -1,0 +1,183 @@
+---
+name: Master Workflow
+on:
+  push:
+    branches:
+      - github-actions
+env:
+  IMAGE_PREFIX: "registry.gitlab.com/emran.bm/sahabee"
+  API_IMAGE_NAME: "${IMAGE_PREFIX}/api"
+  FRONTEND_IMAGE_NAME: "${IMAGE_PREFIX}/frontend"
+  API_IMAGE_RELEASE_VERSION: "0.3.1"
+  FRONTEND_IMAGE_RELEASE_VERSION: "${GITHUB_SHA}"
+  SNAPSHOT_VERSION: "snapshot-${GITHUB_SHA}"
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker Login
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin registry.gitlab.com
+      - name: Build
+        run: |
+          docker-compose build
+          docker-compose push
+        env:
+          API_VERSION: $SNAPSHOT_VERSION
+          FRONTEND_VERSION: $SNAPSHOT_VERSION
+
+  export-logo:
+    runs-on: ubuntu-20.04
+    container:
+      image: dpokidov/imagemagick:7.0.11-13
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build Logo
+        working-directory: visual-identity/
+        run: |
+          convert logo.psd[0] logo.png
+          convert logo.psd[1] logo-black.png
+      - name: Export Files
+        uses: actions/upload-artifact@v2
+        with:
+          name: logo
+          path: visual-identity/*.png
+
+  test-api:
+    runs-on: ubuntu-20.04
+    needs:
+      - build
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker Login
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin registry.gitlab.com
+      - run: |
+          docker-compose pull api
+          docker-compose run --name test_container api sh -c 'DJANGO_SETTINGS_MODULE=sahabee.settings ./manage.py test'
+          docker cp test_container:/sahabee/coverage.xml .
+          sed -i 's/\/sahabee/backend/g' coverage.xml # Update source path according to the current directory structure
+        env:
+          COMPOSE_INTERACTIVE_NO_CLI: 'true'
+          API_VERSION: $SNAPSHOT_VERSION
+          FRONTEND_VERSION: $SNAPSHOT_VERSION
+      - uses: actions/upload-artifact@v2
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  sonarcloud-analysis:
+    runs-on: ubuntu-20.04
+    needs:
+      - test-api
+    container:
+      image: sonarsource/sonar-scanner-cli:latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v2
+        with:
+          name: coverage-report
+      - name: Cache Sonar caches
+        id: sonar-cache
+        uses: actions/cache@v2
+        with:
+          path: .sonar/cache
+          key: sonar-cache
+      - run: sonar-scanner -Dsonar.projectVersion=${CI_COMMIT_SHA}
+
+  test-ansible:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Force GitHub Actions' docker daemon to use vfs.
+        run: |
+          sudo systemctl stop docker
+          echo '{"cgroup-parent":"/actions_job","storage-driver":"vfs"}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl start docker
+      - name: Choose TAGET_HOST ip
+        run: echo "TARGET_HOST=192.168.2.2" >> $GITHUB_ENV
+      - name: Get DNS server
+        run: |
+          DNS_SERVER=`cat /etc/resolv.conf | grep -m 1 nameserver | cut -d' ' -f2`
+          echo "DNS Server: $DNS_SERVER"
+          echo "DNS_SERVER=$DNS_SERVER" >> $GITHUB_ENV
+      - name: Create network
+        run: docker network create --subnet 192.168.2.0/24 test-net
+      - name: Start the target
+        run: docker run -d
+          --network test-net
+          --ip $TARGET_HOST
+          --privileged
+          rastasheep/ubuntu-sshd:18.04
+      - name: Start docker service at the target
+        run: docker run
+          --network test-net
+          --env TARGET_HOST=$TARGET_HOST
+          spy86/ansible:latest
+          bash -c '
+          sshpass -p root ssh -o StrictHostKeyChecking=no root@$TARGET_HOST "service docker start"
+          '
+      - name: Mock sahabee.ir to the test target
+        run: |
+          echo "$TARGET_HOST sahabee.ir" >> /etc/hosts
+          echo "$TARGET_HOST api.sahabee.ir" >> /etc/hosts
+      - name: Mock systemctl
+        working-directory: deployment/ansible/
+        run: sshpass -p root
+          ssh -o StrictHostKeyChecking=no
+          root@sahabee.ir
+          bash -c "echo 'echo \$@' > /bin/systemctl"
+      - name: Setup infra
+        working-directory: deployment/ansible/
+        run: ansible-playbook infra.yml -i inventory.yml -vvv
+          --limit test
+          --extra-vars "shecan_dns_1=$DNS_SERVER shecan_dns_2=$DNS_SERVER"
+      - name: Deploy
+        working-directory: deployment/ansible/
+        run: ansible-playbook deploy.yml -i inventory.yml -vvv --limit test
+      - name: Smoke test:\ Landing page
+        run: curl -i --fail https://sahabee.ir
+      - name: Smoke test:\ API
+        run: curl -i --fail https://api.sahabee.ir
+      - name: Smoke test:\ Backup
+        working-directory: deployment/ansible/
+        run: ansible-playbook backup.yml -i inventory.yml -vvv --limit test
+      - name: Smoke test:\ Restore
+        working-directory: deployment/ansible/
+        run: ansible-playbook restore.yml -i inventory.yml -vvv --limit test
+
+  release:
+    runs-on: ubuntu-20.04
+    needs:
+      - build
+      - test-api
+      - test-ansible
+      - sonarcloud-analysis
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker Login
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin registry.gitlab.com
+      - run: |
+          docker-compose pull api frontend
+          docker tag ${API_IMAGE_NAME}:${API_VERSION} ${API_IMAGE_NAME}:${API_IMAGE_RELEASE_VERSION}
+          docker tag ${FRONTEND_IMAGE_NAME}:${FRONTEND_VERSION} ${FRONTEND_IMAGE_NAME}:${FRONTEND_IMAGE_RELEASE_VERSION}
+          docker push ${API_IMAGE_NAME}:${API_IMAGE_RELEASE_VERSION}
+          docker push ${FRONTEND_IMAGE_NAME}:${FRONTEND_IMAGE_RELEASE_VERSION}
+        env:
+          API_VERSION: $SNAPSHOT_VERSION
+          FRONTEND_VERSION: $SNAPSHOT_VERSION
+
+  deploy:
+    runs-on: ubuntu-20.04
+    needs:
+      - release
+    container:
+      image: spy86/ansible:latest
+    environment:
+      name: production
+      url: https://sahabee.ir
+    steps:
+      - uses: actions/checkout@v2
+      - working-directory: deployment/ansible/
+        run: ansible-playbook deploy.yml -i inventory.yml --limit production
