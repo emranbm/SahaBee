@@ -120,9 +120,27 @@ jobs:
         run: ansible-playbook infra.yml -i inventory.yml -vvv
           --limit test
           --extra-vars "shecan_dns_1=4.4.4.4 shecan_dns_2=8.8.8.8"
+      - name: Inflate SSL files
+        working-directory: deployment/ansible/
+        run: |
+          echo "${{ secrets.SSL_FULL_CHAIN }}" > SSL_FULL_CHAIN_FILE
+          echo "${{ secrets.SSL_PRIVATE_KEY }}" > SSL_PRIVATE_KEY_FILE
       - name: Deploy
         working-directory: deployment/ansible/
-        run: ansible-playbook deploy.yml -i inventory.yml -vvv --limit test
+        run: ansible-playbook deploy.yml -i inventory.yml -vvv
+          --limit test
+          --extra-vars "
+          ssl_full_chain_file=SSL_FULL_CHAIN_FILE
+          ssl_private_key_file=SSL_PRIVATE_KEY_FILE
+          docker_hub_password=${{ secrets.DOCKER_HUB_PASSWORD }}
+          proxy_server_host=${{ secrets.PROXY_SERVER_HOST }}
+          proxy_server_user=${{ secrets.PROXY_SERVER_USER }}
+          proxy_server_pass=${{ secrets.PROXY_SERVER_PASS }}
+          api_version=snapshot-${{ env.GITHUB_SHA }}
+          frontend_version=snapshot-${{ env.GITHUB_SHA }}
+          secret_key=${{ secrets.SAHABEE_SECRET_KEY }}
+          recaptcha_server_key=${{ secrets.RECAPTCHA_SERVER_KEY }}
+          "
       - name: Smoke test:\ Landing page
         run: curl -i --fail https://sahabee.ir
       - name: Smoke test:\ API
