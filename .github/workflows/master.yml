@@ -192,7 +192,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: ping
-        run: ping -c 3 sahabee.ir
+        run: ping -c 3 ${{ secrets.PROXY_SERVER_HOST }}
       - name: Inflate SSL files
         working-directory: deployment/ansible/
         run: |
