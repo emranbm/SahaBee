@@ -190,4 +190,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - working-directory: deployment/ansible/
-        run: ansible-playbook deploy.yml -i inventory.yml --limit production
+        run: ansible-playbook deploy.yml -i inventory.yml
+          --limit production
+          --extra-vars "
+          ssl_full_chain_file=SSL_FULL_CHAIN_FILE
+          ssl_private_key_file=SSL_PRIVATE_KEY_FILE
+          docker_hub_password=${{ secrets.DOCKER_HUB_PASSWORD }}
+          proxy_server_host=${{ secrets.PROXY_SERVER_HOST }}
+          proxy_server_user=${{ secrets.PROXY_SERVER_USER }}
+          proxy_server_pass=${{ secrets.PROXY_SERVER_PASS }}
+          api_version=snapshot-${{ env.GITHUB_SHA }}
+          frontend_version=snapshot-${{ env.GITHUB_SHA }}
+          secret_key=${{ secrets.SAHABEE_SECRET_KEY }}
+          recaptcha_server_key=${{ secrets.RECAPTCHA_SERVER_KEY }}
+          "
