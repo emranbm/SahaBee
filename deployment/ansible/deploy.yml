@@ -15,6 +15,11 @@
         - proxy_server_host
         - proxy_server_user
         - proxy_server_pass
+        - api_version
+        - frontend_version
+        - api_url
+        - secret_key
+        - recaptcha_server_key
   tasks:
     - name: 'Copy compose file'
       copy:
