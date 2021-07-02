@@ -141,14 +141,14 @@ jobs:
           secret_key=${{ secrets.SAHABEE_SECRET_KEY }}
           recaptcha_server_key=${{ secrets.RECAPTCHA_SERVER_KEY }}
           "
-      - name: Smoke test:\ Landing page
+      - name: Smoke test >> Landing page
         run: curl -i --fail https://sahabee.ir
-      - name: Smoke test:\ API
-        run: curl -i --fail https://api.sahabee.ir
-      - name: Smoke test:\ Backup
+      - name: Smoke test >> API
+        run: sleep 15 && curl -i --fail https://api.sahabee.ir
+      - name: Smoke test >> Backup
         working-directory: deployment/ansible/
         run: ansible-playbook backup.yml -i inventory.yml -vvv --limit test
-      - name: Smoke test:\ Restore
+      - name: Smoke test >> Restore
         working-directory: deployment/ansible/
         run: ansible-playbook restore.yml -i inventory.yml -vvv --limit test
 
