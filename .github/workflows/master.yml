@@ -82,6 +82,9 @@ jobs:
           path: .sonar/cache
           key: sonar-cache
       - run: sonar-scanner -Dsonar.projectVersion=${CI_COMMIT_SHA}
+        env:
+          SONAR_HOST_URL: https://sonarcloud.io
+          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
 
   test-ansible:
     runs-on: ubuntu-20.04
