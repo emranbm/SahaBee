@@ -110,14 +110,6 @@ jobs:
           --ip $TARGET_HOST
           --privileged
           rastasheep/ubuntu-sshd:18.04
-      - name: Start docker service at the target
-        run: docker run
-          --network test-net
-          --env TARGET_HOST=$TARGET_HOST
-          spy86/ansible:latest
-          bash -c '
-          sshpass -p root ssh -o StrictHostKeyChecking=no root@$TARGET_HOST "service docker start"
-          '
       - name: Mock sahabee.ir to the test target
         run: |
           echo "$TARGET_HOST sahabee.ir" >> /etc/hosts
