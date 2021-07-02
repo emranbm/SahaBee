@@ -14,8 +14,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Inflate version vars
         run: |
-          echo "API_VERSION=snapshot-${{ env.GITHUB_SHA }}" >> $GITHUB_ENV
-          echo "FRONTEND_VERSION=snapshot-${{ env.GITHUB_SHA }}" >> $GITHUB_ENV
+          echo "API_VERSION=snapshot-${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "FRONTEND_VERSION=snapshot-${GITHUB_SHA}" >> $GITHUB_ENV
       - name: Docker Login
         run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin registry.gitlab.com
       - name: Build
@@ -48,8 +48,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Inflate version vars
         run: |
-          echo "API_VERSION=snapshot-${{ env.GITHUB_SHA }}" >> $GITHUB_ENV
-          echo "FRONTEND_VERSION=snapshot-${{ env.GITHUB_SHA }}" >> $GITHUB_ENV
+          echo "API_VERSION=snapshot-${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "FRONTEND_VERSION=snapshot-${GITHUB_SHA}" >> $GITHUB_ENV
       - name: Docker Login
         run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin registry.gitlab.com
       - run: |
@@ -138,8 +138,8 @@ jobs:
           proxy_server_host=${{ secrets.PROXY_SERVER_HOST }}
           proxy_server_user=${{ secrets.PROXY_SERVER_USER }}
           proxy_server_pass=${{ secrets.PROXY_SERVER_PASS }}
-          api_version=snapshot-${{ env.GITHUB_SHA }}
-          frontend_version=snapshot-${{ env.GITHUB_SHA }}
+          api_version=snapshot-${GITHUB_SHA}
+          frontend_version=snapshot-${GITHUB_SHA}
           secret_key=${{ secrets.SAHABEE_SECRET_KEY }}
           recaptcha_server_key=${{ secrets.RECAPTCHA_SERVER_KEY }}
           "
@@ -165,9 +165,9 @@ jobs:
       - uses: actions/checkout@v2
       - name: Inflate version vars
         run: |
-          echo "API_VERSION=snapshot-${{ env.GITHUB_SHA }}" >> $GITHUB_ENV
-          echo "FRONTEND_VERSION=snapshot-${{ env.GITHUB_SHA }}" >> $GITHUB_ENV
-          echo "FRONTEND_IMAGE_RELEASE_VERSION=${{ env.GITHUB_SHA }}" >> $GITHUB_ENV
+          echo "API_VERSION=snapshot-${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "FRONTEND_VERSION=snapshot-${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "FRONTEND_IMAGE_RELEASE_VERSION=${GITHUB_SHA}" >> $GITHUB_ENV
           echo "API_IMAGE_RELEASE_VERSION=0.3.1" >> $GITHUB_ENV
       - name: Docker Login
         run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin registry.gitlab.com
@@ -201,8 +201,8 @@ jobs:
           proxy_server_host=${{ secrets.PROXY_SERVER_HOST }}
           proxy_server_user=${{ secrets.PROXY_SERVER_USER }}
           proxy_server_pass=${{ secrets.PROXY_SERVER_PASS }}
-          api_version=snapshot-${{ env.GITHUB_SHA }}
-          frontend_version=snapshot-${{ env.GITHUB_SHA }}
+          api_version=snapshot-${GITHUB_SHA}
+          frontend_version=snapshot-${GITHUB_SHA}
           secret_key=${{ secrets.SAHABEE_SECRET_KEY }}
           recaptcha_server_key=${{ secrets.RECAPTCHA_SERVER_KEY }}
           "
