@@ -12,13 +12,6 @@ jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
-      - run: |
-          echo "AAA1"
-          cat /etc/resolv.conf
-          echo "AAA2"
-          cat /etc/resolv.conf | grep -m 1 nameserver
-          echo "AAA3"
-          cat /etc/resolv.conf | grep -m 1 nameserver | cut -d' ' -f2
       - uses: actions/checkout@v2
       - name: Docker Login
         run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin registry.gitlab.com
@@ -104,11 +97,6 @@ jobs:
           sudo systemctl start docker
       - name: Choose TAGET_HOST ip
         run: echo "TARGET_HOST=192.168.2.2" >> $GITHUB_ENV
-      - name: Get DNS server
-        run: |
-          DNS_SERVER=`cat /etc/resolv.conf | grep -m 1 nameserver | cut -d' ' -f2`
-          echo "DNS Server: $DNS_SERVER"
-          echo "DNS_SERVER=$DNS_SERVER" >> $GITHUB_ENV
       - name: Create network
         run: docker network create --subnet 192.168.2.0/24 test-net
       - name: Start the target
@@ -131,7 +119,7 @@ jobs:
         working-directory: deployment/ansible/
         run: ansible-playbook infra.yml -i inventory.yml -vvv
           --limit test
-          --extra-vars "shecan_dns_1=$DNS_SERVER shecan_dns_2=$DNS_SERVER"
+          --extra-vars "shecan_dns_1=4.4.4.4 shecan_dns_2=8.8.8.8"
       - name: Deploy
         working-directory: deployment/ansible/
         run: ansible-playbook deploy.yml -i inventory.yml -vvv --limit test
