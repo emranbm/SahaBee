@@ -112,8 +112,8 @@ jobs:
           rastasheep/ubuntu-sshd:18.04
       - name: Mock sahabee.ir to the test target
         run: |
-          echo "$TARGET_HOST sahabee.ir" >> /etc/hosts
-          echo "$TARGET_HOST api.sahabee.ir" >> /etc/hosts
+          echo "$TARGET_HOST sahabee.ir" | sudo tee -a /etc/hosts
+          echo "$TARGET_HOST api.sahabee.ir" | sudo tee -a /etc/hosts
       - name: Mock systemctl
         working-directory: deployment/ansible/
         run: sshpass -p root
