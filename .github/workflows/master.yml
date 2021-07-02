@@ -5,23 +5,23 @@ on:
     branches:
       - github-actions
 env:
-  IMAGE_PREFIX: "registry.gitlab.com/emran.bm/sahabee"
-  API_IMAGE_NAME: "${IMAGE_PREFIX}/api"
-  FRONTEND_IMAGE_NAME: "${IMAGE_PREFIX}/frontend"
+  API_IMAGE_NAME: "registry.gitlab.com/emran.bm/sahabee/api"
+  FRONTEND_IMAGE_NAME: "registry.gitlab.com/emran.bm/sahabee/frontend"
 jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - name: Inflate version vars
+        run: |
+          echo "API_VERSION=snapshot-${{ env.GITHUB_SHA }}" >> $GITHUB_ENV
+          echo "FRONTEND_VERSION=snapshot-${{ env.GITHUB_SHA }}" >> $GITHUB_ENV
       - name: Docker Login
         run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin registry.gitlab.com
       - name: Build
         run: |
           docker-compose build
           docker-compose push
-        env:
-          API_VERSION: snapshot-${{ env.GITHUB_SHA }}
-          FRONTEND_VERSION: snapshot-${{ env.GITHUB_SHA }}
 
   export-logo:
     runs-on: ubuntu-20.04
@@ -46,6 +46,10 @@ jobs:
       - build
     steps:
       - uses: actions/checkout@v2
+      - name: Inflate version vars
+        run: |
+          echo "API_VERSION=snapshot-${{ env.GITHUB_SHA }}" >> $GITHUB_ENV
+          echo "FRONTEND_VERSION=snapshot-${{ env.GITHUB_SHA }}" >> $GITHUB_ENV
       - name: Docker Login
         run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin registry.gitlab.com
       - run: |
@@ -55,8 +59,6 @@ jobs:
           sed -i 's/\/sahabee/backend/g' coverage.xml # Update source path according to the current directory structure
         env:
           COMPOSE_INTERACTIVE_NO_CLI: 'true'
-          API_VERSION: snapshot-${{ env.GITHUB_SHA }}
-          FRONTEND_VERSION: snapshot-${{ env.GITHUB_SHA }}
       - uses: actions/upload-artifact@v2
         with:
           name: coverage-report
@@ -161,6 +163,12 @@ jobs:
       - sonarcloud-analysis
     steps:
       - uses: actions/checkout@v2
+      - name: Inflate version vars
+        run: |
+          echo "API_VERSION=snapshot-${{ env.GITHUB_SHA }}" >> $GITHUB_ENV
+          echo "FRONTEND_VERSION=snapshot-${{ env.GITHUB_SHA }}" >> $GITHUB_ENV
+          echo "FRONTEND_IMAGE_RELEASE_VERSION=${{ env.GITHUB_SHA }}" >> $GITHUB_ENV
+          echo "API_IMAGE_RELEASE_VERSION=0.3.1" >> $GITHUB_ENV
       - name: Docker Login
         run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin registry.gitlab.com
       - run: |
@@ -169,11 +177,6 @@ jobs:
           docker tag ${FRONTEND_IMAGE_NAME}:${FRONTEND_VERSION} ${FRONTEND_IMAGE_NAME}:${FRONTEND_IMAGE_RELEASE_VERSION}
           docker push ${API_IMAGE_NAME}:${API_IMAGE_RELEASE_VERSION}
           docker push ${FRONTEND_IMAGE_NAME}:${FRONTEND_IMAGE_RELEASE_VERSION}
-        env:
-          API_VERSION: snapshot-${{ env.GITHUB_SHA }}
-          FRONTEND_VERSION: snapshot-${{ env.GITHUB_SHA }}
-          FRONTEND_IMAGE_RELEASE_VERSION: ${{ env.GITHUB_SHA }}
-          API_IMAGE_RELEASE_VERSION: 0.3.1
 
   deploy:
     runs-on: ubuntu-20.04
