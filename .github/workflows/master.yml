@@ -23,8 +23,8 @@ jobs:
           docker-compose build
           docker-compose push
         env:
-          API_VERSION: $SNAPSHOT_VERSION
-          FRONTEND_VERSION: $SNAPSHOT_VERSION
+          API_VERSION: ${{ env.SNAPSHOT_VERSION }}
+          FRONTEND_VERSION: ${{ env.SNAPSHOT_VERSION }}
 
   export-logo:
     runs-on: ubuntu-20.04
@@ -58,8 +58,8 @@ jobs:
           sed -i 's/\/sahabee/backend/g' coverage.xml # Update source path according to the current directory structure
         env:
           COMPOSE_INTERACTIVE_NO_CLI: 'true'
-          API_VERSION: $SNAPSHOT_VERSION
-          FRONTEND_VERSION: $SNAPSHOT_VERSION
+          API_VERSION: ${{ env.SNAPSHOT_VERSION }}
+          FRONTEND_VERSION: ${{ env.SNAPSHOT_VERSION }}
       - uses: actions/upload-artifact@v2
         with:
           name: coverage-report
@@ -165,8 +165,8 @@ jobs:
           docker push ${API_IMAGE_NAME}:${API_IMAGE_RELEASE_VERSION}
           docker push ${FRONTEND_IMAGE_NAME}:${FRONTEND_IMAGE_RELEASE_VERSION}
         env:
-          API_VERSION: $SNAPSHOT_VERSION
-          FRONTEND_VERSION: $SNAPSHOT_VERSION
+          API_VERSION: ${{ env.SNAPSHOT_VERSION }}
+          FRONTEND_VERSION: ${{ env.SNAPSHOT_VERSION }}
 
   deploy:
     runs-on: ubuntu-20.04
