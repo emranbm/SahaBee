@@ -192,7 +192,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: ping
-        run: ping -c 3 185.235.42.248
+        run: ping -c 3 185.235.43.48
       - name: Inflate SSL files
         working-directory: deployment/ansible/
         run: |
