@@ -191,8 +191,6 @@ jobs:
       url: https://sahabee.ir
     steps:
       - uses: actions/checkout@v2
-      - name: ping
-        run: ping -c 3 google.com
       - name: Inflate SSL files
         working-directory: deployment/ansible/
         run: |
