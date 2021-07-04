@@ -26,13 +26,11 @@ all:
     production:
       hosts:
         prod1:
-          sudo_pass: '{{ lookup("env", "SERVER_PROD_PASS") }}'
           ansible_host: '{{ lookup("env", "SERVER_PROD_IP") | mandatory }}'
           ansible_user: '{{ lookup("env", "SERVER_PROD_USER") | mandatory }}'
           ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o ProxyCommand="sshpass -p {{ proxy_server_pass }} ssh -o StrictHostKeyChecking=no -W %h:%p {{ proxy_server_user }}@{{ proxy_server_host }}"'
           ansible_sudo_pass: '{{ sudo_pass }}'
           ansible_become_pass: '{{ sudo_pass }}'
-          ansible_ssh_pass: '{{ lookup("env", "SERVER_PROD_PASS") | mandatory }}'
     test:
       hosts:
         test1:
