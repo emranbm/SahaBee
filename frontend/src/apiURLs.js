@@ -5,8 +5,17 @@ class ApiUrls {
     get login() {
         return `${this.BASE_URL}/api-token-auth/`
     }
+    get users() {
+        return `${this.BASE_URL}/users/`
+    }
+    user(id) {
+        return `${this.users}${id}/`
+    }
+    get selfUser() {
+        return `${this.users}self/`
+    }
     get register() {
-        return `${this.BASE_URL}/users/register/`
+        return `${this.users}register/`
     }
     get rollouts() {
         return `${this.BASE_URL}/rollouts/`
